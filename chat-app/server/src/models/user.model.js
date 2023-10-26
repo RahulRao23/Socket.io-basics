@@ -5,16 +5,11 @@ const UserSchema = new mongoose.Schema({
   email: String,
   access_token: String,
   status: Number,
-  role: Number,
-  created_at: {
-    type: Date,
-    default: Date.now
-  },
-  updated_at: {
-    type: Date,
-    default: Date.now
-  }
-});
+  role: Number
+}, {
+  timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' }
+}
+);
 
 const UserModel = mongoose.model('User', UserSchema);
 
