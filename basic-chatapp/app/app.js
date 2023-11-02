@@ -1,8 +1,15 @@
-const socket = io ('ws://localhost:8080', {
+const socket = io ('ws://localhost:3000', {
   auth: {
     token: 'invalid-token',
   },
 });
+
+/* Emit 'ping' every 2 seconds */
+let count = 0;
+setInterval (() => {
+  /* Volatile will not buffer the events on disconnection */
+  socket.volatile.emit ('ping', ++count);
+}, 2000);
 
 socket.on ('message', text => {
   const el = document.createElement ('li');
