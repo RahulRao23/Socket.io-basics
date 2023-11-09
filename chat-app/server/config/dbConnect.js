@@ -1,29 +1,26 @@
-const mongoose = require('mongoose');
+const mongoose = require ('mongoose');
 
 const URI = 'mongodb://localhost:27017';
-const DB_NAME = '<DB NAME>';
+const DB_NAME = 'chat-app';
 
-function dbConnect() {
+function dbConnect () {
   try {
-    mongoose.connect(`${URI}/${DB_NAME}`);
-    
+    mongoose.connect (`${URI}/${DB_NAME}`);
+
     const dbConnection = mongoose.connection;
 
-    dbConnection.once('open', () => {
-      console.log("DB connection successful");
+    dbConnection.once ('open', () => {
+      console.log ('DB connection successful');
     });
-    dbConnection.on('error', (err) => {
-      console.error("DB connection error: ", err);
+    dbConnection.on ('error', err => {
+      console.error ('DB connection error: ', err);
     });
-
   } catch (error) {
-    console.error("DB connection error: ", error);
+    console.error ('DB connection error: ', error);
   }
 }
 
-async function dbDisconnect() {
-
-}
+async function dbDisconnect () {}
 
 module.exports = {
   dbConnect,
