@@ -1,11 +1,63 @@
 const userServices = require('../services/users.services');
 const STATUS = require('../../config/statusCodes.json');
 const CONSTANTS = require('../utilities/constants');
+const PROTECTED_APIS = require('../../config/protectedApis.json');
 
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const userController = {};
+
+userController.validateUserMiddleware = async (req, res, next) => {
+	const apiName = req.path.split('/')[1];
+	if (Object.values(PROTECTED_APIS.USER).includes(apiName)) {
+		const accessToken = req.headers.access_token;
+
+		if (!accessToken) {
+			res.status(STATUS.BAD_REQUEST).send({
+				error: 'BAD_REQUEST',
+				message: 'Access token missing.',
+			});
+			return;
+		}
+
+		const decodedToken = jwt.decode(accessToken);
+
+		/* Validate user */
+		const userData = await userServices.getUserDetails({
+			_id: decodedToken._id,
+		});
+		if (!userData || userData.status === CONSTANTS.USER_STATUS.DELETED) {
+			res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'User does not exist',
+			});
+			return;
+		}
+
+		/* Validate access token */
+		if (userData.access_token && userData.access_token != accessToken) {
+			res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'Invalid access_token.',
+			});
+			return;
+		}
+		if (!userData.access_token) {
+			res.status(STATUS.ALREADY_REPORTED).send({
+				error: 'ALREADY_REPORTED',
+				message: 'User already logged out.',
+			});
+			return;
+		}
+
+		/* Assign user data to local variables to access within the API */
+		res.locals.accessToken = accessToken;
+		res.locals.userData = userData;
+		res.locals.decodedToken = decodedToken;
+	}
+	next();
+}
 
 userController.getAllUsers = async (req, res) => {
 	/* Handling request before proccessing */
@@ -76,7 +128,7 @@ userController.userlogin = async (req, res) => {
 		if (data.username) queryData.name = data.username;
 
 		/* Get user data */
-		const userData = await userServices.getUserDetailsAsPOJO(queryData);
+		const userData = await userServices.getUserDetails(queryData);
 
 		if (!userData) {
 			res.status(STATUS.UNAUTHORIZED).send({
@@ -101,19 +153,14 @@ userController.userlogin = async (req, res) => {
 
 		/* Generate access token and update in DB */
 		var accessToken = jwt.sign(signData, CONSTANTS.JWT_PRIVATE_KEY);
-		const updatedUserData = await userServices.updateUser(
-			{ _id: userData._id },
-			{ access_token: accessToken }
-		);
+
+		/* Assign new access token and update DB */
+		userData.access_token = accessToken;
+		const updatedUserData = await userData.save();
 
 		res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
-			data: {
-				user_id: userData._id,
-				username: userData.name,
-				access_token: accessToken,
-			},
-			metadata: updatedUserData,
+			data: updatedUserData,
 		});
 		return;
 	} catch (error) {
@@ -128,47 +175,15 @@ userController.userlogin = async (req, res) => {
 
 userController.userLogout = async (req, res) => {
 	try {
-		const accessToken = req.headers.access_token;
 
-		if (!accessToken) {
-			res.status(STATUS.BAD_REQUEST).send({
-				error: 'BAD_REQUEST',
-				message: 'Access token missing.',
-			});
-			return;
-		}
-
-		const decodedToken = jwt.decode(accessToken);
-		console.log({ decodedToken });
-
-		const userData = await userServices.getUserDetailsAsPOJO({
-			_id: decodedToken._id,
-		});
-		if (!userData || userData.status === CONSTANTS.USER_STATUS.DELETED) {
-			res.status(STATUS.UNAUTHORIZED).send({
-				error: 'UNAUTHORIZED',
-				message: 'User does not exist',
-			});
-			return;
-		}
-
-		if (!userData.access_token) {
-			res.status(STATUS.ALREADY_REPORTED).send({
-				error: 'ALREADY_REPORTED',
-				message: 'User already logged out.',
-			});
-			return;
-		}
-
-		const updatedUserData = await userServices.updateUser(
-			{ _id: decodedToken._id },
-			{ access_token: '' }
-		);
+		/* Remove access token on logout */
+		const userData = res.locals.userData;
+		userData.access_token = '';
+		await userData.save();
 
 		res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: {},
-			metadata: updatedUserData,
 		});
 		return;
 	} catch (error) {
@@ -181,5 +196,9 @@ userController.userLogout = async (req, res) => {
 		return;
 	}
 };
+
+userController.addFriend = async (req, res) => {
+	res.status(STATUS.NOT_IMPLEMENTED).send({ message: "API not implemented" });
+}
 
 module.exports = userController;

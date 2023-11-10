@@ -9,6 +9,11 @@ const UserSchema = new mongoose.Schema(
 		access_token: { type: String },
 		socket_id: { type: String },
 		status: { type: Number },
+		friends: [
+			{
+				type: Schema.Types.ObjectId,
+			}
+		],
 		chat_groups: [
 			{
 				type: Schema.Types.ObjectId,

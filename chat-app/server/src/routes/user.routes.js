@@ -1,12 +1,16 @@
 const express = require('express');
 const {
+	validateUserMiddleware,
 	getAllUsers,
 	signUp,
 	userlogin,
 	userLogout,
+	addFriend,
 } = require('../controllers/user.controller');
 
 const userRouter = express.Router();
+
+userRouter.use('/', validateUserMiddleware);
 
 /* User Routes */
 userRouter.get('/getAllUsers', getAllUsers);
@@ -19,6 +23,8 @@ userRouter.post('/signUp', signUp);
 userRouter.post('/login', userlogin);
 
 userRouter.post('/logout', userLogout);
+
+userRouter.post('/addFriend', addFriend);
 
 /* Error handling */
 userRouter.use('/', (req, res, next) => {
