@@ -11,9 +11,15 @@ const ChatGroupSchema = new mongoose.Schema(
 		status: { type: Schema.Types.Number },
 		participants: [
 			{
-				type: Schema.Types.ObjectId,
-				ref: 'User',
-			},
+				_id: {
+					type: Schema.Types.ObjectId,
+					ref: 'User',
+				},
+				role: {
+					type: Schema.Types.Number,
+					
+				}
+			}
 		],
 	},
 	{

@@ -5,7 +5,7 @@ const {
 	signUp,
 	userlogin,
 	userLogout,
-	addFriend,
+	sendFriendRequest,
 } = require('../controllers/user.controller');
 
 const userRouter = express.Router();
@@ -24,7 +24,7 @@ userRouter.post('/login', userlogin);
 
 userRouter.post('/logout', userLogout);
 
-userRouter.post('/addFriend', addFriend);
+userRouter.post('/sendFriendRequest', sendFriendRequest);
 
 /* Error handling */
 userRouter.use('/', (req, res, next) => {

@@ -1,4 +1,5 @@
 const userServices = require('../services/users.services');
+const notificationService = require('../services/notifications.services');
 const STATUS = require('../../config/statusCodes.json');
 const CONSTANTS = require('../utilities/constants');
 const PROTECTED_APIS = require('../../config/protectedApis.json');
@@ -36,17 +37,18 @@ userController.validateUserMiddleware = async (req, res, next) => {
 		}
 
 		/* Validate access token */
-		if (userData.access_token && userData.access_token != accessToken) {
-			res.status(STATUS.UNAUTHORIZED).send({
-				error: 'UNAUTHORIZED',
-				message: 'Invalid access_token.',
-			});
-			return;
-		}
 		if (!userData.access_token) {
 			res.status(STATUS.ALREADY_REPORTED).send({
 				error: 'ALREADY_REPORTED',
 				message: 'User already logged out.',
+			});
+			return;
+		}
+
+		if (userData.access_token != accessToken) {
+			res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'Invalid access_token.',
 			});
 			return;
 		}
@@ -56,6 +58,7 @@ userController.validateUserMiddleware = async (req, res, next) => {
 		res.locals.userData = userData;
 		res.locals.decodedToken = decodedToken;
 	}
+	res.locals.reqParams = Object.keys(req.body).length ? req.body : req.query;
 	next();
 }
 
@@ -72,9 +75,8 @@ userController.getAllUsers = async (req, res) => {
 
 userController.signUp = async (req, res) => {
 	try {
-		const data = Object.keys(req.body).length ? req.body : req.query;
+		const data = res.locals.reqParams;
 
-		console.log('BODY', req.body, req.query);
 		if (!data.email && !data.username && !data.password) {
 			res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
@@ -83,7 +85,6 @@ userController.signUp = async (req, res) => {
 			return;
 		}
 
-		console.log({ pwd: data.password, salt: CONSTANTS.SALT_ROUNDS });
 		const hashedPassword = bcrypt.hashSync(
 			data.password,
 			CONSTANTS.SALT_ROUNDS
@@ -114,7 +115,7 @@ userController.signUp = async (req, res) => {
 userController.userlogin = async (req, res) => {
 	try {
 		/* Validate required fields */
-		const data = Object.keys(req.body).length ? req.body : req.query;
+		const data = res.locals.reqParams;
 		if ((!data.email || !data.username) && !data.password) {
 			res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
@@ -122,13 +123,15 @@ userController.userlogin = async (req, res) => {
 			});
 			return;
 		}
+		console.log("User IP: ", req.ip, req.socket.remoteAddress, req.connection.remoteAddress);
 
-		const queryData = { status: CONSTANTS.ACTIVE };
+		const queryData = { status: CONSTANTS.USER_STATUS.ACTIVE };
 		if (data.email) queryData.email = data.email;
 		if (data.username) queryData.name = data.username;
 
 		/* Get user data */
 		const userData = await userServices.getUserDetails(queryData);
+		console.log({queryData, userData});
 
 		if (!userData) {
 			res.status(STATUS.UNAUTHORIZED).send({
@@ -197,8 +200,86 @@ userController.userLogout = async (req, res) => {
 	}
 };
 
-userController.addFriend = async (req, res) => {
-	res.status(STATUS.NOT_IMPLEMENTED).send({ message: "API not implemented" });
+userController.sendFriendRequest = async (req, res) => {
+	try {
+		const data = res.locals.reqParams;
+		const userData = res.locals.userData;
+
+		if(!data.friend_id) {
+			res.status(STATUS.BAD_REQUEST).send({
+				error: 'BAD_REQUEST',
+				message: 'Required fields are missing.',
+			});
+			return;
+		}
+
+		const friendData = await userServices.getUserDetailsAsPOJO({
+			_id: data.friend_id,
+		});
+		if (!friendData || friendData.status === CONSTANTS.USER_STATUS.DELETED) {
+			res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'Invalid friend_id. User does not exist',
+			});
+			return;
+		}
+
+		/* Validate user socket connection */
+		const io = req.app.get('io');
+		const userSocket = io.sockets.sockets.get(userData.socket_id);
+		if(!userSocket) {
+			res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'Invalid socket id',
+			});
+			return;
+		}
+
+		/* Create a friend request entry */
+		const friendRequestData = {
+			from: userData._id,
+			to: friendData._id,
+			type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST,
+		};
+
+		/* If friend logged in then send request */
+		if(friendData.socket_id) {
+			friendRequestData.status = CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND;
+			io
+			.to(friendData.socket_id)
+			.emit(
+				CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_RECEIVED,
+				{
+					from_id: userData._id, 
+					name: userData.name,
+				}
+			);
+		}
+
+		await notificationService.createNotification(friendRequestData);
+
+		userSocket.emit(
+			CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT, 
+			{
+				status: friendRequestData.status,
+			}
+		);
+
+		res.status(STATUS.SUCCESS).send({
+			message: 'SUCCESS',
+			data: {},
+		});
+		return;
+		
+	} catch (error) {
+		console.log("sendFriendRequest Error: ", error);
+
+		res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+			error: 'INTERNAL_SERVER_ERROR',
+			message: error.message ? error.message : 'Something went wrong',
+		});
+		return;
+	}
 }
 
 module.exports = userController;

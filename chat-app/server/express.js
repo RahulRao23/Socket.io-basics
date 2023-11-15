@@ -4,6 +4,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const { dbConnect } = require('./config/dbConnect');
+const { ValidateUser } = require('./src/sockets/middlewares');
 
 const PORT = 3000;
 
@@ -18,17 +19,21 @@ const io = new Server(server);
 /* Establish DB connection */
 dbConnect();
 
+app.enable('trust proxy');
+app.set('io', io);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/user', userRouter);
 
+io.use(ValidateUser);
+
 io.on('connection', socket => {
 	console.log('Socket connected: ', socket.id);
 	// console.log("Socket data:", socket.handshake.query);
 
-	socket.on('some event', () => {
-		io.emit('some event response', 'socket successful');
+	socket.on('debug', () => {
+		io.emit('debug', 'socket successful');
 	});
 
 	socketHandler(io, socket);
