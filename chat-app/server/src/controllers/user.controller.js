@@ -131,7 +131,6 @@ userController.userlogin = async (req, res) => {
 
 		/* Get user data */
 		const userData = await userServices.getUserDetails(queryData);
-		console.log({queryData, userData});
 
 		if (!userData) {
 			res.status(STATUS.UNAUTHORIZED).send({
@@ -205,7 +204,7 @@ userController.sendFriendRequest = async (req, res) => {
 		const data = res.locals.reqParams;
 		const userData = res.locals.userData;
 
-		if(!data.friend_id) {
+		if (!data.friend_id) {
 			res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
 				message: 'Required fields are missing.',
@@ -227,7 +226,7 @@ userController.sendFriendRequest = async (req, res) => {
 		/* Validate user socket connection */
 		const io = req.app.get('io');
 		const userSocket = io.sockets.sockets.get(userData.socket_id);
-		if(!userSocket) {
+		if (!userSocket) {
 			res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid socket id',
@@ -243,23 +242,23 @@ userController.sendFriendRequest = async (req, res) => {
 		};
 
 		/* If friend logged in then send request */
-		if(friendData.socket_id) {
+		if (friendData.socket_id) {
 			friendRequestData.status = CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND;
 			io
-			.to(friendData.socket_id)
-			.emit(
-				CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_RECEIVED,
-				{
-					from_id: userData._id, 
-					name: userData.name,
-				}
-			);
+				.to(friendData.socket_id)
+				.emit(
+					CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_RECEIVED,
+					{
+						from_id: userData._id,
+						name: userData.name,
+					}
+				);
 		}
 
 		await notificationService.createNotification(friendRequestData);
 
 		userSocket.emit(
-			CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT, 
+			CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT,
 			{
 				status: friendRequestData.status,
 			}
@@ -270,7 +269,7 @@ userController.sendFriendRequest = async (req, res) => {
 			data: {},
 		});
 		return;
-		
+
 	} catch (error) {
 		console.log("sendFriendRequest Error: ", error);
 

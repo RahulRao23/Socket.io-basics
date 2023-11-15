@@ -41,10 +41,12 @@ SocketMiddlewares.ValidateUser = async (socket, next) => {
 			next(errorData);
 			return;
 		}
-		
+
 		/* Update socket id in DB */
 		userData.socket_id = socket.id;
-		await userData.save()
+		const updatedUserData = await userData.save();
+
+		socket.userData = updatedUserData;
 
 		next();
 		return;
