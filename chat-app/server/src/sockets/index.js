@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const userServices = require('../services/users.services');
+const notificationServices = require('../services/notifications.services');
 const CONSTANTS = require('../utilities/constants');
 
 const validateMaxUserPerRoom = async () => {
@@ -25,79 +26,63 @@ const socketHandler = (io, socket) => {
 	});
 
 	/* Add user to room */
-	socket.on(CONSTANTS.ROOM.ADD_TO_ROOM, async userData => {
-		userData = typeof userData == 'string' ? JSON.parse(userData) : userData;
-		console.log({ userData });
+	socket.on(CONSTANTS.ROOM.ADD_TO_ROOM, async data => {
+		const data = typeof data == 'string' ? JSON.parse(data) : data;
+		const userData = socket.userData;
+		console.log({ data });
 
 		const friendDetails = await userServices.getUserDetails({
-			_id: userData.user_id,
+			_id: data.friend_id,
 		});
 
 		/* Check if friend exists */
 		if (!friendDetails) {
-			socket.emit(CONSTANTS.EVENT_NAMES.DOES_NOT_EXIST, 'User does not exist');
-		} else {
-			/* If friend exists and socket is connected */
-			if (friendDetails && friendDetails.socket_id) {
-				/* Add friend to room */
-				const friendSocketId = userData.friend_socket_id;
-				const roomId = 'room:' + userData.room_id;
-				console.log({ friendSocketId, roomId });
-
-				const friendSocket = io.sockets.sockets.get(friendSocketId);
-
-				if (friendSocket) {
-					friendSocket.join(roomId);
-					friendSocket.emit(
-						CONSTANTS.EVENT_NAMES.NOTIFICATION,
-						`You have been added to: ${roomId}`
-					);
-				} else {
-					io
-						.to(socket.id)
-						.emit(
-							CONSTANTS.EVENT_NAMES.INVALID_SOCKET,
-							'Socket id does not exist.'
-						);
-				}
-
-				/* Add friend to group in DB */
-			} else {
-				/* If no socket id then add friend to pending list */
-				await PendingUserModel.insert({
-					user_id: userData.friend_user_id,
-					room_id: userData.room_id,
-				});
-			}
-
-			/* Notify all group members */
-			io
-				.to(roomId)
-				.emit(
-					CONSTANTS.ROOM.USER_ADDED,
-					`${userData.name} added ${friendDetails.name} to the group.`
-				);
+			const errorData = { errName: 'UNAUTHORIZED', message: "Friend does not exist" };
+			socket.emit(CONSTANTS.EVENT_NAMES.DOES_NOT_EXIST, errorData);
+			return;
 		}
 
-		// NOT IN USE
-		// /* Add friend to room */
-		// const friendSocketId = userData.friend_socket_id;
-		// const roomId = 'room:'+userData.room_id;
-		// console.log({friendSocketId, roomId});
+		const notificationData = {
+			from: userData._id,
+			to: friendDetails._id,
+			type: CONSTANTS.NOTIFICATION_TYPES.ROOM_ADD,
+		};
+		/* If friend exists and socket is connected */
+		if (friendDetails.socket_id) {
+			/* Add friend to room */
+			const roomId = 'room:' + data.room_id;
+			console.log({ roomId });
 
-		// const friendSocket = io.sockets.sockets.get(friendSocketId);
+			const friendSocket = io.sockets.sockets.get(friendDetails.socket_id);
+			if (friendSocket) {
+				friendSocket.join(roomId);
+				friendSocket.emit(
+					CONSTANTS.EVENT_NAMES.ROOM_ADD,
+					{
+						room_id: roomId,
+						/* TODO: Send room members data */
+					}
+				);
+			}
+			notificationData.status = CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND;
+		}
 
-		// if(friendSocket) {
-		// 	console.log(friendSocket.id);
-		// 	friendSocket.join(roomId);
-		// 	friendSocket.emit('notification', `You have been added to: ${roomId}`);
-		// } else {
-		// 	io.to(socket.id).emit('user:invalid-socket', "Socket id does not exist.");
-		// }
+		await notificationServices.createNotification(notificationData);
 
-		// /* Added friend to group in DB */
+		/* TODO: Add friend to group in DB */
 
-		// socket.to('room:'+userData.room_id).emit(CONSTANTS.ROOM.USER_ADDED, `Sok: ${socket.id} added to room:${userData.room_id}`);
+		/* Notify all group members */
+		io
+			.to(roomId)
+			.emit(
+				CONSTANTS.ROOM.USER_ADDED,
+				`${userData.name} added ${friendDetails.name} to the group.`
+			);
+
+		/* TODO: Handling inactive group members notification */
+		
+		return;
+
 	});
 
 	socket.on('rooms', () => {
