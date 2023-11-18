@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const jwt = require('jsonwebtoken');
 
 const userServices = require('../services/users.services');
+const chatServices = require('../services/chatGroup.services');
 const CONSTANTS = require('../utilities/constants');
 
 const SocketMiddlewares = {};
@@ -49,11 +50,19 @@ SocketMiddlewares.ValidateUser = async (socket, next) => {
 		socket.userData = updatedUserData;
 
 		next();
-		return;
 	} catch (error) {
 		console.log("Socket error: ", error);
 		throw error;
 	}
+}
+
+SocketMiddlewares.AddUserToRooms = async (socket, next) => {
+	const userData = socket.userData;
+	for (const groupId of userData.chat_groups) {
+		console.log({groupId});
+		socket.join(CONSTANTS.ROOM_PREFIX + groupId);
+	}
+	next();
 }
 
 module.exports = SocketMiddlewares;

@@ -8,7 +8,8 @@ const ChatGroupSchema = new mongoose.Schema(
 			type: Schema.Types.Number,
 			max: 5,
 		},
-		status: { type: Schema.Types.Number },
+		type: { type: Schema.Types.Number },
+		status: { type: Schema.Types.Number, default: 1 },
 		participants: [
 			{
 				_id: {

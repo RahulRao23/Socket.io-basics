@@ -20,6 +20,7 @@ constants.EVENT_NAMES = {
 	FRIEND_REQUEST_SENT: 'friend-request-sent',
 	FRIEND_REQUEST_RECEIVED: 'friend-request-received',
 	FRIEND_ADDED: 'friend-added',
+	FRIEND_REQUEST_DECLINE: 'friend-request-decline',
 };
 
 constants.ROOM = {
@@ -37,8 +38,14 @@ constants.NOTIFICATION_TYPES = {
 	FRIEND_REQUEST: 2,
 };
 
+constants.CHAT_GROUP_TYPES = {
+	GROUP: 1,
+	PERSONAL: 2,
+};
+
 constants.SALT_ROUNDS = 10;
 
 constants.JWT_PRIVATE_KEY = '<PRIVATE-KEY>';
+constants.ROOM_PREFIX = 'Room:';
 
 module.exports = constants;

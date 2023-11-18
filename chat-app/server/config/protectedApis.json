@@ -1,6 +1,7 @@
 {
 	"USER": {
 		"LOG_OUT": "logout",
-		"ADD_FRIEND": "sendFriendRequest"
+		"SEND_FRIEND_REQUEST": "sendFriendRequest",
+		"RESPOND_TO_REQUEST": "respondToRequest"
 	}
 }

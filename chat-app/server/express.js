@@ -4,12 +4,13 @@ const http = require('http');
 const { Server } = require('socket.io');
 
 const { dbConnect } = require('./config/dbConnect');
-const { ValidateUser } = require('./src/sockets/middlewares');
+const { ValidateUser, AddUserToRooms } = require('./src/sockets/middlewares');
 
 const PORT = 3000;
 
 /* Get all routes */
 const userRouter = require('./src/routes/user.routes');
+const chatRouter = require('./src/routes/chatGroup.routes');
 const socketHandler = require('./src/sockets/index');
 
 const app = express();
@@ -25,8 +26,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use('/user', userRouter);
+app.use('/chatGroup', chatRouter);
 
 io.use(ValidateUser);
+io.use(AddUserToRooms);
 
 io.on('connection', socket => {
 	console.log('Socket connected: ', socket.id);

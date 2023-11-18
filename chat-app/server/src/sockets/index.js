@@ -25,9 +25,11 @@ const socketHandler = (io, socket) => {
 		next();
 	});
 
-	/* Add user to room */
+	/** Add user to room 
+	 * params: { friend_id, room_id }
+	*/
 	socket.on(CONSTANTS.ROOM.ADD_TO_ROOM, async data => {
-		const data = typeof data == 'string' ? JSON.parse(data) : data;
+		data = typeof data == 'string' ? JSON.parse(data) : data;
 		const userData = socket.userData;
 		console.log({ data });
 

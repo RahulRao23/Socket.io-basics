@@ -4,18 +4,20 @@ const { NotificationsModel } = require('../models/models');
 const notificationServices = {};
 
 notificationServices.getAllNotifications = async (notificationData) => {
-	const friendRequests = await NotificationsModel.find(notificationData);
-	return friendRequests;
+	return await NotificationsModel.find(notificationData);
 };
 
 notificationServices.getAllNotificationsAsPOJO = async notificationData => {
-	const friendRequests = await NotificationsModel.find(notificationData).lean();
-	return friendRequests;
+	return await NotificationsModel.find(notificationData).lean();
 };
 
+notificationServices.getNotificationDetails = async notificationData => {
+	return await NotificationsModel.findOne(notificationData);
+}
+
 notificationServices.createNotification = async notificationData => {
-	const newRequest = new NotificationsModel(notificationData);
-	return await newRequest.save();
+	const newNotification = new NotificationsModel(notificationData);
+	return await newNotification.save();
 };
 
 notificationServices.updateNotification = async (whereClause, notificationData) => {
