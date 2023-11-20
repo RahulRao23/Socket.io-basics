@@ -22,4 +22,16 @@ chatServices.updateChatGroups = async (whereClause, chatData) => {
 	return await ChatGroupModel.updateOne(whereClause, chatData);
 };
 
+chatServices.getUserChatGroups = async (userId) => {
+	const userChatGroups = await ChatGroupModel.find({
+		'participants._id': { $in: [userId ] }
+	})
+	.populate({
+    path: 'participants._id',
+		select: 'name, email',
+    options: { strictPopulate: false }
+  }).lean();
+	return userChatGroups;
+}
+
 module.exports = chatServices;

@@ -1,12 +1,13 @@
 const express = require('express');
 const {
 	validateUserMiddleware,
-	getAllUsers,
+	debug,
 	signUp,
 	userlogin,
 	userLogout,
 	sendFriendRequest,
 	respondToRequest,
+	getAllNotifications
 } = require('../controllers/user.controller');
 
 const userRouter = express.Router();
@@ -14,10 +15,9 @@ const userRouter = express.Router();
 userRouter.use('/', validateUserMiddleware);
 
 /* User Routes */
-userRouter.get('/getAllUsers', getAllUsers);
-userRouter.get('/debug', (req, res) => {
-	res.json({ message: 'Debug API called ' });
-});
+userRouter.get('/debug', debug);
+
+userRouter.get('/getNotification', getAllNotifications);
 
 userRouter.post('/signUp', signUp);
 

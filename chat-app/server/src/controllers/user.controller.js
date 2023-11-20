@@ -409,15 +409,17 @@ userController.respondToRequest = async (req, res) => {
 			return;
 		}
 
-		io
-			.to(friendData.socket_id)
-			.emit(
-				CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_DECLINE,
-				{ 
-					notification_id: notificationData._id,
-					from: userData._id,	
-				}
-			);
+		if (friendData.socket_id) {
+			io
+				.to(friendData.socket_id)
+				.emit(
+					CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_DECLINE,
+					{
+						notification_id: notificationData._id,
+						from: userData._id,
+					}
+				);
+		}
 
 	} catch (error) {
 		console.log("respondToRequest Error: ", error);
@@ -427,6 +429,15 @@ userController.respondToRequest = async (req, res) => {
 		});
 		return;
 	}
+}
+
+userController.getAllNotifications = async (req, res) => {
+	const userData = res.locals.userData;
+	const notifications = await notificationService.getUserNotifications(userData._id);
+	res
+		.status(STATUS.SUCCESS)
+		.send({ notifications });
+	return;
 }
 
 module.exports = userController;

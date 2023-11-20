@@ -62,6 +62,17 @@ chatController.validateUserMiddleware = async (req, res, next) => {
 	next();
 }
 
+chatController.getUserChatGroups = async (req, res) => {
+	const userData = res.locals.userData;
+	const chatGroups = await chatServices.getUserChatGroups(userData._id);
+	res
+	.status(STATUS.SUCCESS)
+	.send({
+		user_chat_groups: chatGroups
+	});
+	return;
+}
+
 chatController.createChatGroup = async (req, res) => {
 	try {
 		const userData = res.locals.userData;

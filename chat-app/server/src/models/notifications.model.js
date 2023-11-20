@@ -3,10 +3,11 @@ const { Schema } = mongoose;
 
 const NotificationsSchema = new mongoose.Schema(
 	{
-		from: { type: Schema.Types.ObjectId },
-		to: { type: Schema.Types.ObjectId },
+		from: { type: Schema.Types.ObjectId, ref: 'User' },
+		to: { type: Schema.Types.ObjectId, ref: 'User' },
 		type: { type: Schema.Types.Number },
-		status: { type: Schema.Types.Number, default: 1 }
+		status: { type: Schema.Types.Number, default: 1 },
+		view_status: { type: Schema.Types.Number },
 	},
 	{
 		timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
