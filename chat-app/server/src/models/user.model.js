@@ -9,6 +9,7 @@ const UserSchema = new mongoose.Schema(
 		access_token: { type: String },
 		socket_id: { type: String },
 		status: { type: Number },
+		new_message_count: { type: Number },
 		friends: [
 			{
 				type: Schema.Types.ObjectId,

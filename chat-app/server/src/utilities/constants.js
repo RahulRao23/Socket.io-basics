@@ -21,6 +21,7 @@ constants.EVENT_NAMES = {
 	FRIEND_REQUEST_RECEIVED: 'friend-request-received',
 	FRIEND_ADDED: 'friend-added',
 	FRIEND_REQUEST_DECLINE: 'friend-request-decline',
+	NEW_MESSAGE: 'new-message',
 };
 
 constants.ROOM = {
@@ -36,6 +37,7 @@ constants.USER_ROLES = {
 constants.NOTIFICATION_TYPES = {
 	ROOM_ADD: 1,
 	FRIEND_REQUEST: 2,
+	NEW_MESSAGE: 3,
 };
 
 constants.CHAT_GROUP_TYPES = {

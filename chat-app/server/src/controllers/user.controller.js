@@ -271,13 +271,13 @@ userController.sendFriendRequest = async (req, res) => {
 			from: userData._id,
 			to: friendData._id,
 			type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST,
+			status: friendData.socket_id ? CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND : CONSTANTS.FRIEND_REQUEST_STATUS.SENT,
 		};
 
 		const notificationData = await notificationService.createNotification(friendRequestData);
 
 		/* If friend logged in then send request */
 		if (friendData.socket_id) {
-			friendRequestData.status = CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND;
 			io
 				.to(friendData.socket_id)
 				.emit(
@@ -290,10 +290,11 @@ userController.sendFriendRequest = async (req, res) => {
 				);
 		}
 
-
 		userSocket.emit(
 			CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT,
 			{
+				sent_to: friendData._id,
+				name: friendData.name,
 				status: friendRequestData.status,
 			}
 		);

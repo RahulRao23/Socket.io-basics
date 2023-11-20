@@ -28,7 +28,7 @@ chatServices.getUserChatGroups = async (userId) => {
 	})
 	.populate({
     path: 'participants._id',
-		select: 'name, email',
+		select: 'name email',
     options: { strictPopulate: false }
   }).lean();
 	return userChatGroups;

@@ -41,7 +41,11 @@ notificationServices.getUserNotifications = async(userId) => {
 			}
 		],
 	})
-	.populate('User')
+	.populate({
+    path: 'from to',
+		select: 'name email',
+    options: { strictPopulate: false }
+  })
 	.sort({ created_at: -1 });
 }
 
