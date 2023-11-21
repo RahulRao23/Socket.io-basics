@@ -1,6 +1,5 @@
 const express = require('express');
 const {
-	validateUserMiddleware,
 	debug,
 	signUp,
 	userlogin,
@@ -10,24 +9,27 @@ const {
 	getAllNotifications
 } = require('../controllers/user.controller');
 
+const getRequestParamsMiddleware = require('../middlewares/getRequestParams.middleware');
+const validateUserMiddleware = require('../middlewares/validateUser.middleware');
+
 const userRouter = express.Router();
 
-userRouter.use('/', validateUserMiddleware);
+// userRouter.use('/', validateUserMiddleware);
 
 /* User Routes */
 userRouter.get('/debug', debug);
 
-userRouter.get('/getNotification', getAllNotifications);
+userRouter.get('/getNotification', validateUserMiddleware, getRequestParamsMiddleware, getAllNotifications);
 
-userRouter.post('/signUp', signUp);
+userRouter.post('/signUp', getRequestParamsMiddleware, signUp);
 
-userRouter.post('/login', userlogin);
+userRouter.post('/login', getRequestParamsMiddleware, userlogin);
 
-userRouter.post('/logout', userLogout);
+userRouter.post('/logout', validateUserMiddleware, getRequestParamsMiddleware, userLogout);
 
-userRouter.post('/sendFriendRequest', sendFriendRequest);
+userRouter.post('/sendFriendRequest', validateUserMiddleware, getRequestParamsMiddleware, sendFriendRequest);
 
-userRouter.post('/respondToRequest', respondToRequest);
+userRouter.post('/respondToRequest', validateUserMiddleware, getRequestParamsMiddleware, respondToRequest);
 
 /* Error handling */
 userRouter.use('/', (req, res, next) => {

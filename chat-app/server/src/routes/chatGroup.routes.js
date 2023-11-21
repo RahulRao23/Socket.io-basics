@@ -1,16 +1,16 @@
 const express = require('express');
 const {
-	validateUserMiddleware,
 	createChatGroup,
 	getUserChatGroups,
 } = require('../controllers/chatGroup.controller');
 
+const getRequestParamsMiddleware = require('../middlewares/getRequestParams.middleware');
+const validateUserMiddleware = require('../middlewares/validateUser.middleware');
+
 const chatRouter = express.Router();
 
-chatRouter.use('/', validateUserMiddleware);
+chatRouter.get('/getUserChatGroups', validateUserMiddleware, getRequestParamsMiddleware, getUserChatGroups);
 
-chatRouter.get('/getUserChatGroups', getUserChatGroups);
-
-chatRouter.post('/createChatGroup', createChatGroup);
+chatRouter.post('/createChatGroup', validateUserMiddleware, getRequestParamsMiddleware, createChatGroup);
 
 module.exports = chatRouter;
