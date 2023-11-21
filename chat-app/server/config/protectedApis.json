@@ -1,9 +1,0 @@
-{
-	"USER": {
-		"LOG_OUT": "logout",
-		"SEND_FRIEND_REQUEST": "sendFriendRequest",
-		"RESPOND_TO_REQUEST": "respondToRequest",
-		"GET_ALL_NOTIFICATION": "getNotification",
-		"GET_USER_CHAT_GROUPS": "getUserChatGroups"
-	}
-}
