@@ -81,11 +81,10 @@ userController.userlogin = async (req, res) => {
 		/* Validate required fields */
 		const data = res.locals.reqParams;
 		if ((!data.email || !data.username) && !data.password) {
-			res.status(STATUS.BAD_REQUEST).send({
+			return res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
 				message: 'Required data not sent',
 			});
-			return;
 		}
 		console.log("User IP: ", req.ip, req.socket.remoteAddress, req.connection.remoteAddress);
 
@@ -97,19 +96,17 @@ userController.userlogin = async (req, res) => {
 		const userData = await userServices.getUserDetails(queryData);
 
 		if (!userData) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'User does not exist',
 			});
-			return;
 		}
 		/* Validate password for user */
 		if (!bcrypt.compareSync(data.password, userData.password)) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid password',
 			});
-			return;
 		}
 
 		const signData = {
@@ -124,18 +121,16 @@ userController.userlogin = async (req, res) => {
 		userData.access_token = accessToken;
 		const updatedUserData = await userData.save();
 
-		res.status(STATUS.SUCCESS).send({
+		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: updatedUserData,
 		});
-		return;
 	} catch (error) {
 		console.log('Login ERROR: ', error);
-		res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
 			error: 'INTERNAL_SERVER_ERROR',
 			message: error.message ? error.message : 'Something went wrong',
 		});
-		return;
 	}
 };
 
@@ -153,19 +148,17 @@ userController.userLogout = async (req, res) => {
 		userData.access_token = '';
 		await userData.save();
 
-		res.status(STATUS.SUCCESS).send({
+		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: {},
 		});
-		return;
 	} catch (error) {
 		console.log('Logout Error: ', error);
 
-		res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
 			error: 'INTERNAL_SERVER_ERROR',
 			message: error.message ? error.message : 'Something went wrong',
 		});
-		return;
 	}
 };
 /** Send Friend Request
@@ -180,33 +173,30 @@ userController.sendFriendRequest = async (req, res) => {
 		const userData = res.locals.userData;
 
 		if (!data.friend_id) {
-			res.status(STATUS.BAD_REQUEST).send({
+			return res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
 				message: 'Required fields are missing.',
 			});
-			return;
 		}
 
 		const friendData = await userServices.getUserDetailsAsPOJO({
 			_id: data.friend_id,
 		});
 		if (!friendData || friendData.status === CONSTANTS.USER_STATUS.DELETED) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid friend_id. User does not exist',
 			});
-			return;
 		}
 
 		/* Validate user socket connection */
 		const io = req.app.get('io');
 		const userSocket = io.sockets.sockets.get(userData.socket_id);
 		if (!userSocket) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid socket id',
 			});
-			return;
 		}
 
 		/* Create a friend request entry */
@@ -242,20 +232,18 @@ userController.sendFriendRequest = async (req, res) => {
 			}
 		);
 
-		res.status(STATUS.SUCCESS).send({
+		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: {},
 		});
-		return;
 
 	} catch (error) {
 		console.log("sendFriendRequest Error: ", error);
 
-		res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
 			error: 'INTERNAL_SERVER_ERROR',
 			message: error.message ? error.message : 'Something went wrong',
 		});
-		return;
 	}
 }
 
@@ -271,31 +259,28 @@ userController.respondToRequest = async (req, res) => {
 		const userData = res.locals.userData;
 
 		if (!data.notification_id || !data.response) {
-			res.status(STATUS.BAD_REQUEST).send({
+			return res.status(STATUS.BAD_REQUEST).send({
 				error: 'BAD_REQUEST',
 				message: 'Required fields are missing.',
 			});
-			return;
 		}
 
 		if (
 			data.response != CONSTANTS.FRIEND_REQUEST_STATUS.ACCEPTED &&
 			data.response != CONSTANTS.FRIEND_REQUEST_STATUS.DECLINED
 		) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid response',
 			});
-			return;
 		}
 
 		const notificationData = await notificationService.getNotificationDetails({ _id: data.notification_id });
 		if (!notificationData) {
-			res.status(STATUS.UNAUTHORIZED).send({
+			return res.status(STATUS.UNAUTHORIZED).send({
 				error: 'UNAUTHORIZED',
 				message: 'Invalid notification_id. Notification does not exist',
 			});
-			return;
 		}
 
 		notificationData.status = data.response;
@@ -346,11 +331,10 @@ userController.respondToRequest = async (req, res) => {
 					}
 				);
 
-			res.status(STATUS.SUCCESS).send({
+			return res.status(STATUS.SUCCESS).send({
 				message: 'SUCCESS',
 				data: {},
 			});
-			return;
 		}
 
 		if (friendData.socket_id) {
@@ -367,21 +351,19 @@ userController.respondToRequest = async (req, res) => {
 
 	} catch (error) {
 		console.log("respondToRequest Error: ", error);
-		res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
 			error: 'INTERNAL_SERVER_ERROR',
 			message: error.message ? error.message : 'Something went wrong',
 		});
-		return;
 	}
 }
 
 userController.getAllNotifications = async (req, res) => {
 	const userData = res.locals.userData;
 	const notifications = await notificationService.getUserNotifications(userData._id);
-	res
+	return res
 		.status(STATUS.SUCCESS)
 		.send({ notifications });
-	return;
 }
 
 module.exports = userController;
