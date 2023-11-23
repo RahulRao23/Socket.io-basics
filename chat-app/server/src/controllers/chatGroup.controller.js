@@ -4,8 +4,6 @@ const notificationService = require('../services/notifications.services');
 const STATUS = require('../../config/statusCodes.json');
 const CONSTANTS = require('../utilities/constants');
 
-const jwt = require('jsonwebtoken');
-
 const chatController = {};
 
 chatController.getUserChatGroups = async (req, res) => {

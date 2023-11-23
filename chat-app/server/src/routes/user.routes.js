@@ -14,8 +14,6 @@ const validateUserMiddleware = require('../middlewares/validateUser.middleware')
 
 const userRouter = express.Router();
 
-// userRouter.use('/', validateUserMiddleware);
-
 /* User Routes */
 userRouter.get('/debug', debug);
 

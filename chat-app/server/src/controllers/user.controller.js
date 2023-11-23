@@ -161,6 +161,7 @@ userController.userLogout = async (req, res) => {
 		});
 	}
 };
+
 /** Send Friend Request
  * 
  * @param {friend_id} req 
@@ -202,7 +203,7 @@ userController.sendFriendRequest = async (req, res) => {
 		/* Create a friend request entry */
 		const friendRequestData = {
 			from: userData._id,
-			to: friendData._id,
+			to_friend: friendData._id,
 			type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST,
 			status: friendData.socket_id ? CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND : CONSTANTS.FRIEND_REQUEST_STATUS.SENT,
 		};
@@ -284,6 +285,7 @@ userController.respondToRequest = async (req, res) => {
 		}
 
 		notificationData.status = data.response;
+		notificationData.type = CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST_RESPONSE;
 		await notificationData.save();
 
 		const friendData = await userServices.getUserDetails({ _id: notificationData.from });
@@ -360,7 +362,7 @@ userController.respondToRequest = async (req, res) => {
 
 userController.getAllNotifications = async (req, res) => {
 	const userData = res.locals.userData;
-	const notifications = await notificationService.getUserNotifications(userData._id);
+	const notifications = await notificationService.getUserNotifications(userData._id, userData.chat_groups);
 	return res
 		.status(STATUS.SUCCESS)
 		.send({ notifications });
