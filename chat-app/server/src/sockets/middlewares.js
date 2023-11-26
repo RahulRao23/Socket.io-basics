@@ -62,6 +62,8 @@ SocketMiddlewares.AddUserToRooms = async (socket, next) => {
 		console.log({groupId});
 		socket.join(CONSTANTS.ROOM_PREFIX + groupId);
 	}
+	/* Update active members count when user log's in */
+	await chatServices.activateUserInChatGroups(userData.chat_groups);
 	next();
 }
 

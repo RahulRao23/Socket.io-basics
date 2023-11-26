@@ -29,46 +29,37 @@ notificationServices.getUserNotifications = async(userId, roomIdList) => {
 	/* Get notifications sent to user or friend request responses */
 	/**
 	 * Select notifications where
-	 * 1. notification is to the rooms that user is part of AND not sent by user
+	 * 1. notification is to the user
 	 * OR
-	 * 2. notification is from user AND is of types friend request sent by user OR friend's response to user's friend request
-	 * OR
-	 * 3. notification is sent to user AND type is friend request
+	 * 2. notification is from user AND is friend's response to user's friend request OR friend request sent by user
 	 */
 	return await NotificationsModel.find({
 		$or: [
 			{
-				$and: [
-					{ to_group: { $in: roomIdList } },
-					{ from: { $ne: userId } },
-				]
-			}, 
-			{
-				$and: [
-					{ from: userId },
-					// { status: {$in: [CONSTANTS.FRIEND_REQUEST_STATUS.ACCEPTED, CONSTANTS.FRIEND_REQUEST_STATUS.DECLINED] } },
-					{ type: { $in: [CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST, CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST_RESPONSE] } }
-				]
+				to: userId
 			},
 			{
 				$and: [
-					{ to_friend: userId },
-					{ type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST }
+					{ from: userId },
+					{ type: { $in: [CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST, CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST_RESPONSE] } },
 				]
-			}
+			}, 
 		],
 	})
 	.populate({
-    path: 'from to_friend',
+    path: 'from to',
 		select: 'name email',
     options: { strictPopulate: false }
   })
-	.populate({
-    path: 'to_group',
-		select: 'type',
-    options: { strictPopulate: false }
-  })
 	.sort({ created_at: -1 });
+}
+
+// notificationServices.deleteNotification = async (notificationIdList) => {
+// 	return await NotificationsModel.deleteMany({ notification_id })
+// }
+
+notificationServices.createMultipleNotifications = async (notificationList) => {
+	return await NotificationsModel.insertMany(notificationList);
 }
 
 module.exports = notificationServices;

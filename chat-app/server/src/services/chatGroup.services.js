@@ -34,4 +34,22 @@ chatServices.getUserChatGroups = async (userId) => {
 	return userChatGroups;
 }
 
+chatServices.getChatGroupDetail = async (whereClause) => {
+	return await ChatGroupModel.findOne(whereClause);
+}
+
+chatServices.activateUserInChatGroups = async (roomIdList) => {
+	return await ChatGroupModel.updateMany(
+		{ _id: { $in: roomIdList } },
+		{ $inc: { active_members: 1 } }
+	)
+}
+
+chatServices.deactivateUserInChatGroups = async (roomIdList) => {
+	return await ChatGroupModel.updateMany(
+		{ _id: { $in: roomIdList } },
+		{ $dec: { active_members: -1 } }
+	)
+}
+
 module.exports = chatServices;

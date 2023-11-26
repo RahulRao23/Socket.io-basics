@@ -26,4 +26,20 @@ userServices.updateUser = async (whereClause, userData) => {
 	return await UserModel.updateOne(whereClause, userData);
 };
 
+userServices.getInactiveChatGroupMembers = async (roomId) => {
+	return await UserModel.find({
+		$and: [
+			{
+				$or: [
+					{ access_token: { $exists: false } },
+					{ access_token: '' },
+				]
+			},
+			{
+				chat_groups: { $elemMatch: { $eq: roomId } }
+			}
+		]
+	});
+}
+
 module.exports = userServices;

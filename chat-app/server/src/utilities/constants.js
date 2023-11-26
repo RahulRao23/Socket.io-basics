@@ -7,7 +7,6 @@ constants.USER_STATUS = {
 
 constants.FRIEND_REQUEST_STATUS = {
 	SENT: 1,
-	RECEIVED_BY_FRIEND: 2,
 	ACCEPTED: 3,
 	DECLINED: 4,
 };
@@ -22,6 +21,9 @@ constants.EVENT_NAMES = {
 	FRIEND_ADDED: 'friend-added',
 	FRIEND_REQUEST_DECLINE: 'friend-request-decline',
 	NEW_MESSAGE: 'new-message',
+	DISCONNECTING: 'disconnecting',
+	DISCONNECT: 'disconnect',
+	DISCONNECT_RESPONSE: 'disconnect-response',
 };
 
 constants.ROOM = {

@@ -2,6 +2,8 @@ const mongoose = require('mongoose');
 const userServices = require('../services/users.services');
 const notificationServices = require('../services/notifications.services');
 const conversationService = require('../services/conversation.services');
+const chatServices = require('../services/chatGroup.services');
+
 const CONSTANTS = require('../utilities/constants');
 
 const validateMaxUserPerRoom = async () => {
@@ -45,37 +47,48 @@ const socketHandler = (io, socket) => {
 			return;
 		}
 
-		const notificationData = {
-			from: userData._id,
-			to: friendDetails._id,
-			type: CONSTANTS.NOTIFICATION_TYPES.ROOM_ADD,
-		};
+		const groupDetails = await chatServices.getChatGroupDetail({ _id: data.room_id });
+		groupDetails.total_members += 1;
+
+		groupDetails.participants.push(friendDetails._id);
+		await groupDetails.save();
+
+		friendDetails.chat_groups.push(groupDetails._id);
+		await friendDetails.save();
+
+		if (groupDetails.total_members > groupDetails.active_members) {
+			const inactiveUsers = await userServices.getInactiveChatGroupMembers(groupDetails._id);
+			console.log({inactiveUsers});
+			const newNotifications = [];
+
+			for (const { _id } of inactiveUsers) {
+				newNotifications.push({
+					from: userData._id,
+					to: _id,
+					type: CONSTANTS.NOTIFICATION_TYPES.ROOM_ADD,
+					data: {
+						_id: friendDetails._id,
+						name: friendDetails.name,
+					}
+				});
+			}
+			await notificationServices.createMultipleNotifications(newNotifications);
+		}
+
+		const roomId = CONSTANTS.ROOM_PREFIX + data.room_id;
+		console.log({ roomId });
+
 		/* If friend exists and socket is connected */
 		if (friendDetails.socket_id) {
 			/* Add friend to room */
-			const roomId = CONSTANTS.ROOM_PREFIX + data.room_id;
-			console.log({ roomId });
-
 			const friendSocket = io.sockets.sockets.get(friendDetails.socket_id);
 			if (friendSocket) {
 				friendSocket.join(roomId);
-				friendSocket.emit(
-					CONSTANTS.EVENT_NAMES.ROOM_ADD,
-					{
-						room_id: roomId,
-						/* TODO: Send room members data */
-					}
-				);
 			}
-			notificationData.status = CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND;
 		}
 
-		await notificationServices.createNotification(notificationData);
-
-		/* TODO: Add friend to group in DB */
-
 		/* Notify all group members */
-		io
+		return io
 			.to(roomId)
 			.emit(
 				CONSTANTS.ROOM.USER_ADDED,
@@ -85,11 +98,6 @@ const socketHandler = (io, socket) => {
 					message: `${userData.name} added ${friendDetails.name} to the group.`,
 				}
 			);
-
-		/* TODO: Handling inactive group members notification */
-
-		return;
-
 	});
 
 	socket.on(CONSTANTS.EVENT_NAMES.NEW_MESSAGE, async data => {
@@ -103,14 +111,19 @@ const socketHandler = (io, socket) => {
 			text: data.text,
 		});
 
-		/* Create notification to all users if not connected */
-		await notificationServices.createNotification({
-			from: userData._id,
-			to: data.room_id,
-			type: CONSTANTS.NOTIFICATION_TYPES.NEW_MESSAGE,
-		});
+		/* Create notification to all users only if all users are not connected */
+		const groupDetails = await chatServices.getChatGroupDetail({ _id: data.room_id });
+		if (groupDetails.total_members > groupDetails.active_members) {
+			const notificationData = {
+				from: userData._id,
+				to: data.room_id,
+				type: CONSTANTS.NOTIFICATION_TYPES.NEW_MESSAGE,
+			};
 
-		socket
+			await notificationServices.createNotification(notificationData);
+		}
+
+		return socket
 			.to(CONSTANTS.ROOM_PREFIX + data.room_id)
 			.emit(
 				CONSTANTS.EVENT_NAMES.NEW_MESSAGE,
@@ -121,9 +134,17 @@ const socketHandler = (io, socket) => {
 					sent_at: newMessage.created_at,
 				}
 			);
+	})
 
+	socket.on(CONSTANTS.EVENT_NAMES.DISCONNECTING, () => {
+    console.log(socket.rooms); // the Set contains at least the socket ID
+  });
+
+	socket.on(CONSTANTS.EVENT_NAMES.DISCONNECT, async () => {
+		const userData = socket.userData;
+		userData.socket_id = '';
+		await userData.save();
 		return;
-
 	})
 
 	socket.on('rooms', () => {

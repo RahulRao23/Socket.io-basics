@@ -10,6 +10,7 @@ const ChatGroupSchema = new mongoose.Schema(
 		},
 		type: { type: Schema.Types.Number },
 		status: { type: Schema.Types.Number, default: 1 },
+		active_members: { type: Schema.Types.Number, default: 0 },
 		participants: [
 			{
 				_id: {

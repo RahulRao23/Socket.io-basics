@@ -148,6 +148,7 @@ userController.userLogout = async (req, res) => {
 		userData.access_token = '';
 		await userData.save();
 
+		await chatServices.deactivateUserInChatGroups(userData.chat_groups);
 		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: {},
@@ -203,9 +204,9 @@ userController.sendFriendRequest = async (req, res) => {
 		/* Create a friend request entry */
 		const friendRequestData = {
 			from: userData._id,
-			to_friend: friendData._id,
+			to: friendData._id,
 			type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST,
-			status: friendData.socket_id ? CONSTANTS.FRIEND_REQUEST_STATUS.RECEIVED_BY_FRIEND : CONSTANTS.FRIEND_REQUEST_STATUS.SENT,
+			status: CONSTANTS.FRIEND_REQUEST_STATUS.SENT,
 		};
 
 		const notificationData = await notificationService.createNotification(friendRequestData);
@@ -220,18 +221,22 @@ userController.sendFriendRequest = async (req, res) => {
 						notification_id: notificationData._id,
 						from_id: userData._id,
 						name: userData.name,
+						status: notificationData.status,
 					}
 				);
 		}
 
-		userSocket.emit(
-			CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT,
-			{
-				sent_to: friendData._id,
-				name: friendData.name,
-				status: friendRequestData.status,
-			}
-		);
+		io
+			.to(userData.socket_id)
+			.emit(
+				CONSTANTS.EVENT_NAMES.FRIEND_REQUEST_SENT,
+				{
+					notification_id: notificationData._id,
+					sent_to: friendData._id,
+					name: friendData.name,
+					status: notificationData.status,
+				}
+			);
 
 		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
@@ -350,6 +355,11 @@ userController.respondToRequest = async (req, res) => {
 					}
 				);
 		}
+
+		return res.status(STATUS.SUCCESS).send({
+			message: 'SUCCESS',
+			data: {},
+		});
 
 	} catch (error) {
 		console.log("respondToRequest Error: ", error);
