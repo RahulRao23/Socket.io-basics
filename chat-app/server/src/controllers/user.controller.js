@@ -30,7 +30,11 @@ userController.debug = async (req, res) => {
 
 /** Sign Up
  * 
- * @param {{email, username, password}} req 
+ * @param {{
+ * 	email: String;
+ *  username: String;
+ * 	password: String;
+ * }} req 
  * @param {*} res 
  * @returns 
  */
@@ -72,9 +76,13 @@ userController.signUp = async (req, res) => {
 
 /** User Login
  * 
- * @param {{email, username, password}} req 
+ * @param {{
+ * 	email: String;
+ *  username: String;
+ * 	password: String;
+ * }} req 
  * @param {*} res 
- * @returns 
+ * @returns {*}
  */
 userController.userlogin = async (req, res) => {
 	try {
@@ -136,7 +144,7 @@ userController.userlogin = async (req, res) => {
 
 /** User Logout
  * 
- * @param {*} req 
+ * @param {{access_token: String}} req 
  * @param {*} res 
  * @returns 
  */
@@ -165,7 +173,10 @@ userController.userLogout = async (req, res) => {
 
 /** Send Friend Request
  * 
- * @param {friend_id} req 
+ * @param {{
+ * 	access_token: String;
+ * 	friend_id: String;
+ * }} req 
  * @param {*} res 
  * @returns 
  */
@@ -255,7 +266,10 @@ userController.sendFriendRequest = async (req, res) => {
 
 /**
  * 
- * @param {{notification_id, response}} req 
+ * @param {{
+ * 	notification_id: String;
+ * 	response: String;
+ * }} req 
  * @param {*} res 
  * @returns 
  */
@@ -370,12 +384,21 @@ userController.respondToRequest = async (req, res) => {
 	}
 }
 
+/**
+ * 
+ * @param {{access_token: String}} req 
+ * @param {*} res 
+ * @returns 
+ */
 userController.getAllNotifications = async (req, res) => {
 	const userData = res.locals.userData;
 	const notifications = await notificationService.getUserNotifications(userData._id, userData.chat_groups);
 	return res
 		.status(STATUS.SUCCESS)
-		.send({ notifications });
+		.send({
+			message: 'SUCCESS',
+			data: { notifications },
+		});
 }
 
 module.exports = userController;
