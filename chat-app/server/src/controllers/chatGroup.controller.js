@@ -1,6 +1,6 @@
 const chatServices = require('../services/chatGroup.services');
 const userServices = require('../services/users.services');
-const notificationService = require('../services/notifications.services');
+const conversationService = require('../services/conversation.services');
 const STATUS = require('../../config/statusCodes.json');
 const CONSTANTS = require('../utilities/constants');
 
@@ -56,6 +56,44 @@ chatController.createChatGroup = async (req, res) => {
 		/* Yet to be implemented */
 	} catch (error) {
 		console.log('Create ChatGroup ERROR: ', error);
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+			error: 'INTERNAL_SERVER_ERROR',
+			message: error.message ? error.message : 'Something went wrong',
+		});
+	}
+}
+
+chatController.getChatMessages = async (req, res) => {
+	try {
+		const userData = res.locals.userData;
+		const data = res.locals.reqParams;
+
+		if (!data.room_id || !data.offset) {
+			return res.status(STATUS.BAD_REQUEST).send({
+				error: 'BAD_REQUEST',
+				message: 'Required data not sent',
+			});
+		}
+
+		if (!userData.chat_groups.includes(data.room_id)) {
+			return res.status(STATUS.UNAUTHORIZED).send({
+				error: 'UNAUTHORIZED',
+				message: 'User is not a group member.',
+			});
+		}
+
+		const chatMessages = await conversationService.getChatMessages(data.room_id, data.offset);
+
+		return res
+			.status(STATUS.SUCCESS)
+			.send({
+				room_id: data.room_id,
+				chat_messages: chatMessages,
+				offset: data.offset + 1,
+			});
+
+	} catch (error) {
+		console.log('Get ChatMessages ERROR: ', error);
 		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
 			error: 'INTERNAL_SERVER_ERROR',
 			message: error.message ? error.message : 'Something went wrong',
