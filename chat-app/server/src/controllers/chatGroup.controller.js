@@ -12,7 +12,10 @@ chatController.getUserChatGroups = async (req, res) => {
 	return res
 	.status(STATUS.SUCCESS)
 	.send({
-		user_chat_groups: chatGroups
+		message: "SUCCESS",
+		data: {
+			user_chat_groups: chatGroups
+		}
 	});
 }
 
@@ -49,8 +52,11 @@ chatController.createChatGroup = async (req, res) => {
 		return res
 			.status(STATUS.SUCCESS)
 			.send({
-				group_id: newGroup._id,
-				group_name: newGroup.name,
+				message: "SUCCESS",
+				data: {
+					group_id: newGroup._id,
+					group_name: newGroup.name,
+				}
 			});
 
 		/* Yet to be implemented */
@@ -87,9 +93,12 @@ chatController.getChatMessages = async (req, res) => {
 		return res
 			.status(STATUS.SUCCESS)
 			.send({
-				room_id: data.room_id,
-				chat_messages: chatMessages,
-				offset: data.offset + 1,
+				message: "SUCCESS",
+				data: {
+					room_id: data.room_id,
+					chat_messages: chatMessages,
+					offset: data.offset + 1,
+				}
 			});
 
 	} catch (error) {

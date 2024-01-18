@@ -277,6 +277,7 @@ userController.respondToRequest = async (req, res) => {
 	try {
 		const data = res.locals.reqParams;
 		const userData = res.locals.userData;
+		const io = req.app.get('io');
 
 		if (!data.notification_id || !data.response) {
 			return res.status(STATUS.BAD_REQUEST).send({
@@ -334,7 +335,6 @@ userController.respondToRequest = async (req, res) => {
 			await friendData.save();
 
 			const roomId = CONSTANTS.ROOM_PREFIX + newChat._id;
-			const io = req.app.get('io');
 			const userSocket = io.sockets.sockets.get(userData.socket_id);
 			userSocket.join(roomId);
 
@@ -348,6 +348,7 @@ userController.respondToRequest = async (req, res) => {
 				.emit(
 					CONSTANTS.EVENT_NAMES.FRIEND_ADDED,
 					{
+						notification_id: notificationData._id,
 						chat_group_id: newChat._id,
 					}
 				);
@@ -366,6 +367,7 @@ userController.respondToRequest = async (req, res) => {
 					{
 						notification_id: notificationData._id,
 						from: userData._id,
+						name: userData.name,
 					}
 				);
 		}
