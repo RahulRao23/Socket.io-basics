@@ -97,7 +97,7 @@ chatController.getChatMessages = async (req, res) => {
 				data: {
 					room_id: data.room_id,
 					chat_messages: chatMessages,
-					offset: data.offset + 1,
+					offset: +data.offset + 1,
 				}
 			});
 
