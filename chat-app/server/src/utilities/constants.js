@@ -3,6 +3,7 @@ const constants = {};
 constants.USER_STATUS = {
 	ACTIVE: 1,
 	DELETED: 2,
+	LOGGED_OUT: 3,
 };
 
 constants.FRIEND_REQUEST_STATUS = {
@@ -12,9 +13,9 @@ constants.FRIEND_REQUEST_STATUS = {
 };
 
 constants.EVENT_NAMES = {
-	DOES_NOT_EXIST: 'does_not_exist',
-	NOTIFY_USER: 'notify_user',
-	ROOM_ADD: 'room_add',
+	DOES_NOT_EXIST: 'does-not-exist',
+	NOTIFY_USER: 'notify-user',
+	ROOM_ADD: 'room-add',
 	INVALID_SOCKET: 'invalid-socket',
 	FRIEND_REQUEST_SENT: 'friend-request-sent',
 	FRIEND_REQUEST_RECEIVED: 'friend-request-received',
@@ -27,8 +28,8 @@ constants.EVENT_NAMES = {
 };
 
 constants.ROOM = {
-	ADD_TO_ROOM: 'add_to_room',
-	USER_ADDED: 'user_added',
+	ADD_TO_ROOM: 'add-to-room',
+	USER_ADDED: 'user-added',
 };
 
 constants.USER_ROLES = {

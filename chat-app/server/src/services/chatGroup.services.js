@@ -48,7 +48,7 @@ chatServices.activateUserInChatGroups = async (roomIdList) => {
 chatServices.deactivateUserInChatGroups = async (roomIdList) => {
 	return await ChatGroupModel.updateMany(
 		{ _id: { $in: roomIdList } },
-		{ $dec: { active_members: -1 } }
+		{ $inc: { active_members: -1 } }
 	)
 }
 

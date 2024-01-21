@@ -48,7 +48,13 @@ const socketHandler = (io, socket) => {
 		}
 
 		const groupDetails = await chatServices.getChatGroupDetail({ _id: data.room_id });
+		if (!groupDetails) {
+			const errorData = { errName: 'UNAUTHORIZED', message: "Group does not exist" };
+			io.to(userData.socket_id).emit(CONSTANTS.EVENT_NAMES.DOES_NOT_EXIST, errorData);
+			return;
+		}
 		groupDetails.total_members += 1;
+		if (friendDetails.status === CONSTANTS.USER_STATUS.ACTIVE) groupDetails.active_members += 1;
 
 		groupDetails.participants.push(friendDetails._id);
 		await groupDetails.save();
@@ -113,6 +119,11 @@ const socketHandler = (io, socket) => {
 
 		/* Create notification to all users only if all users are not connected */
 		const groupDetails = await chatServices.getChatGroupDetail({ _id: data.room_id });
+		if (!groupDetails) {
+			const errorData = { errName: 'UNAUTHORIZED', message: "Group does not exist" };
+			io.to(userData.socket_id).emit(CONSTANTS.EVENT_NAMES.DOES_NOT_EXIST, errorData);
+			return;
+		}
 		if (groupDetails.total_members > groupDetails.active_members) {
 			const notificationData = {
 				from: userData._id,
@@ -143,15 +154,19 @@ const socketHandler = (io, socket) => {
 	socket.on(CONSTANTS.EVENT_NAMES.DISCONNECT, async () => {
 		const userData = socket.userData;
 		userData.socket_id = '';
-		await userData.save();
+		await Promise.all([
+			userData.save(),
+			chatServices.deactivateUserInChatGroups(userData.chat_groups),
+		]);
 		return;
 	})
 
+	/* Debug to check Rooms and socket connections */
 	socket.on('rooms', () => {
 		const roomIds = io.of('/').adapter.rooms;
 		const sids = io.of('/').adapter.sids;
-		console.log({ roomIds, sids });
-		socket.emit('rooms', { roomIds, sids });
+		console.log({ roomIds: [...roomIds], sids: [...sids] });
+		socket.emit('rooms', { roomIds: [...roomIds], sids: [...sids] });
 	});
 };
 

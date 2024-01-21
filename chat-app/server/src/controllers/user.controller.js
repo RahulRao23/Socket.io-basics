@@ -96,7 +96,7 @@ userController.userlogin = async (req, res) => {
 		}
 		console.log("User IP: ", req.ip, req.socket.remoteAddress, req.connection.remoteAddress);
 
-		const queryData = { status: CONSTANTS.USER_STATUS.ACTIVE };
+		const queryData = { status: CONSTANTS.USER_STATUS.LOGGED_OUT };
 		if (data.email) queryData.email = data.email;
 		if (data.username) queryData.name = data.username;
 
@@ -127,6 +127,7 @@ userController.userlogin = async (req, res) => {
 
 		/* Assign new access token and update DB */
 		userData.access_token = accessToken;
+		userData.status = CONSTANTS.USER_STATUS.ACTIVE;
 		const updatedUserData = await userData.save();
 
 		return res.status(STATUS.SUCCESS).send({
@@ -154,9 +155,10 @@ userController.userLogout = async (req, res) => {
 		/* Remove access token on logout */
 		const userData = res.locals.userData;
 		userData.access_token = '';
+		userData.status = CONSTANTS.USER_STATUS.LOGGED_OUT;
 		await userData.save();
 
-		await chatServices.deactivateUserInChatGroups(userData.chat_groups);
+		// await chatServices.deactivateUserInChatGroups(userData.chat_groups);
 		return res.status(STATUS.SUCCESS).send({
 			message: 'SUCCESS',
 			data: {},
