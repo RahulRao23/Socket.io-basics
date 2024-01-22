@@ -220,6 +220,7 @@ userController.sendFriendRequest = async (req, res) => {
 			to: friendData._id,
 			type: CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST,
 			status: CONSTANTS.FRIEND_REQUEST_STATUS.SENT,
+			toType: CONSTANTS.CHAT_GROUP_REFERENCES.USER,
 		};
 
 		const notificationData = await notificationService.createNotification(friendRequestData);

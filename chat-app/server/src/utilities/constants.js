@@ -49,6 +49,17 @@ constants.CHAT_GROUP_TYPES = {
 	PERSONAL: 2,
 };
 
+constants.CHAT_GROUP_REFERENCES = {
+	USER: 'User', 
+	CHAT_GROUP: 'ChatGroup',
+};
+
+constants.NOTIFICATION_STATUS = {
+	SENT: 1,
+	READ: 2,
+	DELETED: 3,
+};
+
 constants.SALT_ROUNDS = 10;
 
 constants.JWT_PRIVATE_KEY = '<PRIVATE-KEY>';

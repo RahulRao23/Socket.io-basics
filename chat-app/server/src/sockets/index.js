@@ -125,13 +125,28 @@ const socketHandler = (io, socket) => {
 			return;
 		}
 		if (groupDetails.total_members > groupDetails.active_members) {
-			const notificationData = {
+			const notificationData = await notificationServices.getNotificationDetails({
 				from: userData._id,
 				to: data.room_id,
-				type: CONSTANTS.NOTIFICATION_TYPES.NEW_MESSAGE,
-			};
+				status: CONSTANTS.NOTIFICATION_STATUS.SENT,
+			});
 
-			await notificationServices.createNotification(notificationData);
+			/* Create new notification */
+			if(!notificationData) {
+				const newNotificationData = {
+					from: userData._id,
+					to: data.room_id,
+					type: CONSTANTS.NOTIFICATION_TYPES.NEW_MESSAGE,
+					toType: CONSTANTS.CHAT_GROUP_REFERENCES.CHAT_GROUP,
+					count: 1,
+				};
+				await notificationServices.createNotification(newNotificationData);
+			} else {
+				/* Increment counter if new meesage is sent to same counter */
+				notificationData.count += 1;
+				await notificationData.save();
+			}
+			
 		}
 
 		return socket

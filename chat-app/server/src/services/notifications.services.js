@@ -43,12 +43,18 @@ notificationServices.getUserNotifications = async(userId, roomIdList) => {
 					{ from: userId },
 					{ type: { $in: [CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST, CONSTANTS.NOTIFICATION_TYPES.FRIEND_REQUEST_RESPONSE] } },
 				]
-			}, 
+			},
+			{
+				$and: [
+					{ to: { $in: roomIdList } },
+					{ from: { $ne: userId } },
+				]
+			}
 		],
 	})
 	.populate({
     path: 'from to',
-		select: 'name email',
+		select: '_id name type count',
     options: { strictPopulate: false }
   })
 	.sort({ created_at: -1 });
