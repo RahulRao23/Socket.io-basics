@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
+const { Schema } = mongoose;
 
 const ConversationSchema = new mongoose.Schema(
 	{
-		sender: { type: String },
-		room_id: { type: String },
-		text: { type: String },
+		sender: { type: Schema.Types.ObjectId, ref: 'User' },
+		room_id: { type: Schema.Types.ObjectId, ref: 'ChatGroup' },
+		text: { type: Schema.Types.String },
 	},
 	{
 		timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
