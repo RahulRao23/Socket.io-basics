@@ -396,14 +396,49 @@ userController.respondToRequest = async (req, res) => {
  * @returns 
  */
 userController.getAllNotifications = async (req, res) => {
-	const userData = res.locals.userData;
-	const notifications = await notificationService.getUserNotifications(userData._id, userData.chat_groups);
-	return res
-		.status(STATUS.SUCCESS)
-		.send({
-			message: 'SUCCESS',
-			data: { notifications },
+	try {
+		const userData = res.locals.userData;
+		const notifications = await notificationService.getUserNotifications(userData._id, userData.chat_groups);
+		return res
+			.status(STATUS.SUCCESS)
+			.send({
+				message: 'SUCCESS',
+				data: { notifications },
+			});
+	} catch (error) {
+		console.log("getAllNotifications Error: ", error);
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+			error: 'INTERNAL_SERVER_ERROR',
+			message: error.message ? error.message : 'Something went wrong',
 		});
+	}
+}
+
+/**
+ * 
+ * @param {{access_token: String}} req 
+ * @param {*} res 
+ */
+userController.getFriendsList = async (req, res) => {
+	try {
+		const { friends } = res.locals.userData;
+		let friendsList = [];
+		if (friends) {
+			friendsList = await userServices.getFriendsList(friends);
+		}
+		return res
+			.status(STATUS.SUCCESS)
+			.send({
+				message: 'SUCCESS',
+				data: { friendsList },
+			});
+	} catch (error) {
+		console.log("getFriendsList Error: ", error);
+		return res.status(STATUS.INTERNAL_SERVER_ERROR).send({
+			error: 'INTERNAL_SERVER_ERROR',
+			message: error.message ? error.message : 'Something went wrong',
+		});
+	}
 }
 
 module.exports = userController;

@@ -42,4 +42,11 @@ userServices.getInactiveChatGroupMembers = async (roomId) => {
 	});
 }
 
+userServices.getFriendsList = async (friendsIds) => {
+	return await UserModel.find({
+		_id: { $in: friendsIds }
+	})
+	.select('_id name email');
+}
+
 module.exports = userServices;

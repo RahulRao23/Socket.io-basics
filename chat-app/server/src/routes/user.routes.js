@@ -6,7 +6,8 @@ const {
 	userLogout,
 	sendFriendRequest,
 	respondToRequest,
-	getAllNotifications
+	getAllNotifications,
+	getFriendsList,
 } = require('../controllers/user.controller');
 
 const getRequestParamsMiddleware = require('../middlewares/getRequestParams.middleware');
@@ -18,6 +19,8 @@ const userRouter = express.Router();
 userRouter.get('/debug', debug);
 
 userRouter.get('/getNotification', validateUserMiddleware, getRequestParamsMiddleware, getAllNotifications);
+
+userRouter.get('/getFriendsList', getRequestParamsMiddleware, validateUserMiddleware, getFriendsList);
 
 userRouter.post('/signUp', getRequestParamsMiddleware, signUp);
 
